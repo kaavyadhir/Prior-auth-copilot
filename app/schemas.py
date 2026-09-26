@@ -1,11 +1,11 @@
 """Request/response contracts for the prior-authorization service."""
-from enum import Enum
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, Field
 
 
-class Outcome(str, Enum):
+class Outcome(StrEnum):
     APPROVE = "approve"
     DENY = "deny"
     ROUTE_TO_HUMAN = "route_to_human"
