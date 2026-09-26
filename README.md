@@ -1,3 +1,13 @@
+---
+title: Prior Authorization Decision Support
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 8000
+pinned: false
+license: mit
+---
+
 # Prior Authorization Decision Support
 
 An API and demo UI that evaluates health-insurance prior-authorization requests against

@@ -1,22 +1,29 @@
 FROM python:3.11-slim
 
+# Run as a non-root user. Hugging Face Spaces executes containers as UID 1000,
+# and a service running as root is poor practice on any host.
+RUN useradd --create-home --uid 1000 user
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    HF_HOME=/app/.cache/huggingface
+    HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH \
+    HF_HOME=/home/user/.cache/huggingface
 
-WORKDIR /app
+USER user
+WORKDIR /home/user/app
 
 # CPU-only torch, installed first so pip treats the dependency as satisfied.
-# sentence-transformers pulls in the default CUDA build otherwise, which adds
-# roughly 2 GB of GPU libraries to an image that will never see a GPU.
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+# sentence-transformers pulls the default CUDA build otherwise, adding roughly
+# 2 GB of GPU libraries to an image that will never see a GPU.
+RUN pip install --no-cache-dir --user torch --index-url https://download.pytorch.org/whl/cpu
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY --chown=user requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
 
-COPY app/ ./app/
-COPY scripts/ ./scripts/
-COPY data/policies/ ./data/policies/
+COPY --chown=user app/ ./app/
+COPY --chown=user scripts/ ./scripts/
+COPY --chown=user data/policies/ ./data/policies/
 
 # Bake the embedding model into the image so the first request is not a cold
 # model download.
