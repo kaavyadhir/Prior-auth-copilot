@@ -1,9 +1,14 @@
+# Note: data/policies/ is deliberately NOT ignored. The policies are public CMS
+# documents committed to the repo, and the image bakes the search index from
+# them at build time so the container starts ready to serve.
 .venv/
 venv/
 __pycache__/
 .git/
+.github/
 .pytest_cache/
 .ruff_cache/
-data/policies/
+data/index/
 tests/
 .env
+*.md
