@@ -1,0 +1,94 @@
+SOURCE: Centers for Medicare & Medicaid Services, Medicare Coverage Database
+DOCUMENT: National Coverage Determination (NCD) 100.1
+TITLE: Bariatric Surgery for Treatment of Co-Morbid Conditions Related to Morbid Obesity
+URL: https://www.cms.gov/medicare-coverage-database/view/ncd.aspx?NCDId=57
+EFFECTIVE DATE OF THIS VERSION: 09/24/2013
+RETRIEVED: 2026-09-26
+NOTE: Verbatim policy text. Site navigation, transmittal numbers and revision
+history have been omitted; no policy language has been altered.
+
+A. General
+
+Obesity may be caused by medical conditions such as hypothyroidism, Cushing's disease, and
+hypothalamic lesions, or can aggravate a number of cardiac and respiratory diseases as well as
+diabetes and hypertension. Non-surgical services in connection with the treatment of obesity are
+covered when such services are an integral and necessary part of a course of treatment for one of
+these medical conditions.
+
+Bariatric surgery procedures are performed to treat comorbid conditions associated with morbid
+obesity. Two types of surgical procedures are employed. Malabsorptive procedures divert food from
+the stomach to a lower part of the digestive tract where the normal mixing of digestive fluids and
+absorption of nutrients cannot occur. Restrictive procedures restrict the size of the stomach and
+decrease intake. Surgery can combine both types of procedures.
+
+Descriptions of bariatric surgery procedures:
+
+1. Roux-en-Y Gastric Bypass (RYGBP). The RYGBP achieves weight loss by gastric restriction and
+malabsorption. Reduction of the stomach to a small gastric pouch (30 cc) results in feelings of
+satiety following even small meals. RYGBP procedures can be open or laparoscopic.
+
+2. Biliopancreatic Diversion with Duodenal Switch (BPD/DS) or Gastric Reduction Duodenal Switch
+(BPD/GRDS). The BPD achieves weight loss by gastric restriction and malabsorption. BPD/DS or
+BPD/GRDS procedures can be open or laparoscopic.
+
+3. Adjustable Gastric Banding (AGB). The AGB achieves weight loss by gastric restriction only. A
+band creating a gastric pouch with a capacity of approximately 15 to 30 cc's encircles the
+uppermost portion of the stomach. AGB procedures are laparoscopic only.
+
+4. Sleeve Gastrectomy. Sleeve gastrectomy is a 70%-80% greater curvature gastrectomy (sleeve
+resection of the stomach) with continuity of the gastric lesser curve being maintained while
+simultaneously reducing stomach volume. Sleeve gastrectomy procedures can be open or laparoscopic.
+
+5. Vertical Gastric Banding (VGB). The VGB achieves weight loss by gastric restriction only. VGB
+procedures are essentially no longer performed.
+
+Indications and Limitations of Coverage
+
+B. Nationally Covered Indications
+
+Effective for services performed on and after February 21, 2006, Open and laparoscopic Roux-en-Y
+gastric bypass (RYGBP), open and laparoscopic Biliopancreatic Diversion with Duodenal Switch
+(BPD/DS) or Gastric Reduction Duodenal Switch (BPD/GRDS), and laparoscopic adjustable gastric
+banding (LAGB) are covered for Medicare beneficiaries who have a body-mass index >= 35, have at
+least one co-morbidity related to obesity, and have been previously unsuccessful with medical
+treatment for obesity.
+
+Effective for dates of service on and after February 21, 2006, these procedures are only covered
+when performed at facilities that are: (1) certified by the American College of Surgeons as a Level
+1 Bariatric Surgery Center; or (2) certified by the American Society for Bariatric Surgery as a
+Bariatric Surgery Center of Excellence. Effective for dates of service on and after September 24,
+2013, facilities are no longer required to be certified.
+
+Effective for services performed on and after February 12, 2009, the Centers for Medicare &
+Medicaid Services (CMS) determines that Type 2 diabetes mellitus is a co-morbidity for purposes of
+this NCD.
+
+C. Nationally Non-Covered Indications
+
+Treatments for obesity alone remain non-covered.
+
+Supplemented fasting is not covered under the Medicare program as a general treatment for obesity.
+
+The following bariatric surgery procedures are non-covered for all Medicare beneficiaries:
+Open adjustable gastric banding;
+Open sleeve gastrectomy;
+Laparoscopic sleeve gastrectomy (prior to June 27, 2012);
+Open and laparoscopic vertical banded gastroplasty;
+Intestinal bypass surgery; and,
+Gastric balloon for treatment of obesity.
+
+D. Other
+
+Effective for services performed on and after June 27, 2012, Medicare Administrative Contractors
+(MACs) acting within their respective jurisdictions may determine coverage of stand-alone
+laparoscopic sleeve gastrectomy (LSG) for the treatment of co-morbid conditions related to obesity
+in Medicare beneficiaries only when all of the following conditions a.-c. are satisfied.
+
+a. The beneficiary has a body-mass index (BMI) >= 35 kg/m2,
+b. The beneficiary has at least one co-morbidity related to obesity, and,
+c. The beneficiary has been previously unsuccessful with medical treatment for obesity.
+
+The determination of coverage for any bariatric surgery procedures that are not specifically
+identified in an NCD as covered or non-covered, for Medicare beneficiaries who have a body-mass
+index >= 35, have at least one co-morbidity related to obesity, and have been previously
+unsuccessful with medical treatment for obesity, is left to the local MACs.

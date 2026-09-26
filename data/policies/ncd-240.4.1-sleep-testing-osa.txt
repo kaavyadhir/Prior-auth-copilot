@@ -1,0 +1,63 @@
+SOURCE: Centers for Medicare & Medicaid Services, Medicare Coverage Database
+DOCUMENT: National Coverage Determination (NCD) 240.4.1
+TITLE: Sleep Testing for Obstructive Sleep Apnea (OSA)
+URL: https://www.cms.gov/medicare-coverage-database/view/ncd.aspx?NCDId=330&NCDver=1
+EFFECTIVE DATE OF THIS VERSION: 03/03/2009
+RETRIEVED: 2026-09-26
+NOTE: Verbatim policy text. Site navigation, transmittal numbers and revision
+history have been omitted; no policy language has been altered.
+
+A. General
+
+Obstructive sleep apnea (OSA) is the collapse of the oropharyngeal walls and the obstruction of
+airflow occurring during sleep. Diagnostic tests for OSA have historically been classified into
+four types. The most comprehensive is designated Type I attended facility based polysomnography
+(PSG), which is considered the reference standard for diagnosing OSA. Attended facility based
+polysomnogram is a comprehensive diagnostic sleep test including at least electroencephalography
+(EEG), electro-oculography (EOG), electromyography (EMG), heart rate or electrocardiography (ECG),
+airflow, breathing/respiratory effort, and arterial oxygen saturation (SaO2) furnished in a sleep
+laboratory facility in which a technologist supervises the recording during sleep time and has the
+ability to intervene if needed.
+
+Three categories of portable monitors (used both in attended and unattended settings) have been
+developed for the diagnosis of OSA. Type II monitors have a minimum of 7 channels (e.g., EEG, EOG,
+EMG, ECG-heart rate, airflow, breathing/respiratory effort, SaO2) - this type of device monitors
+sleep staging, so AHI can be calculated. Type III monitors have a minimum of 4 monitored channels
+including ventilation or airflow (at least two channels of respiratory movement or respiratory
+movement and airflow), heart rate or ECG, and oxygen saturation. Type IV devices may measure one,
+two, three or more parameters but do not meet all the criteria of a higher category device.
+
+Indications and Limitations of Coverage
+
+B. Nationally Covered Indications
+
+Effective for claims with dates of service on and after March 3, 2009, the Centers for Medicare &
+Medicaid Services finds that the evidence is sufficient to determine that the results of the sleep
+tests identified below can be used by a beneficiary's treating physician to diagnose OSA.
+
+1. Type I PSG is covered when used to aid the diagnosis of OSA in beneficiaries who have clinical
+signs and symptoms indicative of OSA if performed attended in a sleep lab facility.
+
+2. Type II or Type III sleep testing devices are covered when used to aid the diagnosis of OSA in
+beneficiaries who have clinical signs and symptoms indicative of OSA if performed unattended in or
+out of a sleep lab facility or attended in a sleep lab facility.
+
+3. Type IV sleep testing devices measuring three or more channels, one of which is airflow, are
+covered when used to aid the diagnosis of OSA in beneficiaries who have signs and symptoms
+indicative of OSA if performed unattended in or out of a sleep lab facility or attended in a sleep
+lab facility.
+
+4. Sleep testing devices measuring three or more channels that include actigraphy, oximetry, and
+peripheral arterial tone, are covered when used to aid the diagnosis of OSA in beneficiaries who
+have signs and symptoms indicative of OSA if performed unattended in or out of a sleep lab facility
+or attended in a sleep lab facility.
+
+C. Nationally Non-Covered Indications
+
+Effective for claims with dates of services on and after March 3, 2009, other diagnostic sleep
+tests for the diagnosis of OSA, other than those noted above for prescribing CPAP, are not
+sufficient for the coverage of CPAP and are not covered.
+
+D. Other
+
+N/A

@@ -1,0 +1,9 @@
+# Normalise line endings. Without this, Windows checkouts commit CRLF, which
+# breaks shell scripts and produces noisy whole-file diffs for other machines.
+* text=auto eol=lf
+
+# Never touch binary content.
+*.png binary
+*.jpg binary
+*.pdf binary
+*.npy binary

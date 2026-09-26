@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prior Authorization Decision Support</title>
+<style>
+  :root {
+    --bg:#f7f8fa; --panel:#ffffff; --sunken:#f0f2f5;
+    --line:#e2e6ec; --line-soft:#eef1f5;
+    --ink:#11161d; --ink-2:#48566a; --ink-3:#8593a6;
+    --accent:#2563eb; --accent-soft:#eff4ff;
+    --ok:#127a45; --ok-bg:#e8f6ee; --ok-line:#a9ddc0;
+    --no:#b02318; --no-bg:#fdedeb; --no-line:#f3b8b1;
+    --hold:#8a6100; --hold-bg:#fdf4e3; --hold-line:#ecd398;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.06);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0c0e12; --panel:#14181e; --sunken:#1a1f26;
+      --line:#262c35; --line-soft:#1f242c;
+      --ink:#e9edf3; --ink-2:#a4b0c0; --ink-3:#6d7b8d;
+      --accent:#6fa0ff; --accent-soft:#16233c;
+      --ok:#4fc283; --ok-bg:#0f2519; --ok-line:#1e4a31;
+      --no:#f08a80; --no-bg:#2a1512; --no-line:#5a2822;
+      --hold:#e5b53f; --hold-bg:#271f10; --hold-line:#4e3d17;
+      --shadow:0 1px 3px rgba(0,0,0,.4);
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+  @media(max-width:600px){.wrap{padding:0 16px}}
+
+  header{background:var(--panel);border-bottom:1px solid var(--line)}
+  .head-in{padding:26px 0 22px}
+  .eyebrow{
+    font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:7px;
+  }
+  h1{margin:0 0 9px;font-size:26px;line-height:1.2;letter-spacing:-.02em;font-weight:700}
+  @media(max-width:600px){h1{font-size:21px}}
+  .lede{margin:0;color:var(--ink-2);max-width:74ch;font-size:15px}
+  .lede b{color:var(--ink);font-weight:600}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .lg{
+    display:inline-flex;align-items:center;gap:7px;font-size:12.5px;
+    padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--sunken);
+  }
+  .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .dot.ok{background:var(--ok)} .dot.no{background:var(--no)} .dot.hold{background:var(--hold)}
+
+  main{padding:22px 0 72px}
+  .grid{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:20px;align-items:start}
+  @media(max-width:920px){.grid{grid-template-columns:1fr}}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .panel-h{
+    padding:14px 18px;border-bottom:1px solid var(--line-soft);
+    font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);
+  }
+  .panel-b{padding:18px}
+
+  .presets{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px}
+  .preset{
+    font:inherit;font-size:12.5px;padding:6px 12px;border-radius:999px;cursor:pointer;
+    border:1px solid var(--line);background:var(--sunken);color:var(--ink-2);transition:.12s;
+  }
+  .preset:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .preset[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);font-weight:600}
+
+  label{display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--ink-2)}
+  input,textarea{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;
+    background:var(--sunken);color:var(--ink);font:inherit;font-size:14px;
+  }
+  input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;background:var(--panel)}
+  textarea{min-height:168px;resize:vertical}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+  .field{margin-bottom:14px}
+  .hint{font-size:11.5px;color:var(--ink-3);margin-top:5px}
+
+  .go{
+    width:100%;padding:12px;border:0;border-radius:9px;background:var(--accent);
+    color:#fff;font:inherit;font-size:15px;font-weight:600;cursor:pointer;
+  }
+  .go:hover{filter:brightness(1.07)}
+  .go:disabled{opacity:.65;cursor:progress}
+
+  /* pipeline trace */
+  .trace{display:grid;gap:0;margin-bottom:20px}
+  .step{display:grid;grid-template-columns:26px 1fr;gap:12px;position:relative;padding-bottom:16px}
+  .step:last-child{padding-bottom:0}
+  .step::before{
+    content:"";position:absolute;left:12.5px;top:23px;bottom:1px;width:1.5px;background:var(--line);
+  }
+  .step:last-child::before{display:none}
+  .node{
+    width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+    font-size:12px;font-weight:700;border:1.5px solid var(--line);
+    background:var(--sunken);color:var(--ink-3);z-index:1;
+  }
+  .step.done .node{border-color:var(--ok);background:var(--ok-bg);color:var(--ok)}
+  .step.stop .node{border-color:var(--hold);background:var(--hold-bg);color:var(--hold)}
+  .step.skip .node{opacity:.5}
+  .step-t{font-size:13.5px;font-weight:600;margin-top:3px}
+  .step.skip .step-t{color:var(--ink-3)}
+  .step-d{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+  .step-d code{font-family:var(--mono);font-size:11.5px;background:var(--sunken);padding:1px 5px;border-radius:4px}
+
+  .verdict{border-radius:11px;padding:17px 18px;border:1px solid;margin-bottom:18px}
+  .verdict.approve{background:var(--ok-bg);border-color:var(--ok-line)}
+  .verdict.deny{background:var(--no-bg);border-color:var(--no-line)}
+  .verdict.route_to_human{background:var(--hold-bg);border-color:var(--hold-line)}
+  .v-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .v-label{font-size:19px;font-weight:700;letter-spacing:-.01em}
+  .verdict.approve .v-label{color:var(--ok)}
+  .verdict.deny .v-label{color:var(--no)}
+  .verdict.route_to_human .v-label{color:var(--hold)}
+  .v-tag{
+    font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:5px;
+    background:rgba(127,127,127,.15);color:var(--ink-2);
+  }
+  .v-reason{margin-top:7px;font-size:14px;color:var(--ink)}
+
+  .meter{margin:0 0 22px}
+  .meter-h{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--ink-3);margin-bottom:6px}
+  .meter-h b{color:var(--ink);font-size:15px;font-family:var(--mono)}
+  .bar{height:7px;background:var(--line);border-radius:4px;overflow:hidden}
+  .bar span{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .45s ease}
+  .meter-f{font-size:11.5px;color:var(--ink-3);margin-top:6px;font-family:var(--mono)}
+
+  .sec{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px}
+  .crit{display:grid;grid-template-columns:auto 1fr;gap:11px;padding:12px 0;border-top:1px solid var(--line-soft)}
+  .chip{
+    font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.04em;
+    padding:3px 7px;border-radius:5px;height:fit-content;margin-top:2px;white-space:nowrap;
+  }
+  .chip.met{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-line)}
+  .chip.not_met{background:var(--no-bg);color:var(--no);border:1px solid var(--no-line)}
+  .chip.unknown{background:var(--hold-bg);color:var(--hold);border:1px solid var(--hold-line)}
+  .crit-n{font-size:14px;min-width:0}
+  .crit-e{margin-top:5px;font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--line);padding-left:10px;font-style:italic}
+  .crit-miss{margin-top:5px;font-size:12.5px;color:var(--hold)}
+
+  details.cite{border-top:1px solid var(--line-soft)}
+  details.cite summary{
+    cursor:pointer;font-size:13px;padding:11px 0;display:flex;justify-content:space-between;
+    gap:12px;align-items:center;list-style:none;
+  }
+  details.cite summary::-webkit-details-marker{display:none}
+  .cite-n{display:flex;align-items:center;gap:8px;min-width:0}
+  .cite-n span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .caret{font-size:10px;color:var(--ink-3);transition:transform .15s;flex:none}
+  details[open] .caret{transform:rotate(90deg)}
+  .sim{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);flex:none}
+  .sim.best{color:var(--accent);font-weight:600}
+  details.cite pre{
+    margin:0 0 12px;padding:13px;background:var(--sunken);border-radius:8px;border:1px solid var(--line-soft);
+    font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-x:auto;max-height:280px;font-family:var(--mono);
+  }
+
+  .empty{text-align:center;padding:46px 20px;color:var(--ink-3)}
+  .empty h3{margin:0 0 8px;font-size:15px;color:var(--ink-2);font-weight:600}
+  .empty p{margin:0;font-size:13.5px;max-width:42ch;margin-inline:auto}
+  .err{background:var(--no-bg);border:1px solid var(--no-line);color:var(--no);padding:14px;border-radius:9px;font-size:13.5px}
+
+  .spin{
+    display:inline-block;width:13px;height:13px;margin-right:8px;vertical-align:-2px;
+    border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;
+    animation:r .7s linear infinite;
+  }
+  @keyframes r{to{transform:rotate(360deg)}}
+  .loading{padding:36px 20px;text-align:center;color:var(--ink-2)}
+  .loading .stage{font-size:13.5px;margin-top:10px;color:var(--ink-3);font-family:var(--mono)}
+
+  footer{border-top:1px solid var(--line);margin-top:34px;padding:20px 0 0;color:var(--ink-3);font-size:12.5px}
+  footer a{color:var(--accent);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+  footer p{margin:0 0 5px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap head-in">
+    <div class="eyebrow">Clinical policy automation</div>
+    <h1>Prior Authorization Decision Support</h1>
+    <p class="lede">
+      Evaluates a pre-approval request against published CMS coverage determinations.
+      <b>The language model never decides.</b> It judges each coverage criterion
+      individually &mdash; met, not met, or unknown &mdash; and a deterministic rule engine
+      turns those judgements into an outcome, citing the policy passage it used.
+    </p>
+    <div class="legend">
+      <span class="lg"><span class="dot ok"></span> Approve &mdash; every criterion explicitly met</span>
+      <span class="lg"><span class="dot no"></span> Deny &mdash; a criterion explicitly failed</span>
+      <span class="lg"><span class="dot hold"></span> Route to human &mdash; cannot decide, and says why</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid">
+
+    <section class="panel">
+      <div class="panel-h">Request</div>
+      <div class="panel-b">
+        <div class="presets" id="presets"></div>
+        <form id="form">
+          <div class="row">
+            <div><label for="member">Member ID</label><input id="member" value="M10042"></div>
+            <div><label for="proc">Procedure code</label><input id="proc"></div>
+          </div>
+          <div class="row">
+            <div><label for="dx">Diagnosis codes</label><input id="dx"></div>
+            <div><label for="units">Units</label><input id="units" type="number" value="1" min="1"></div>
+          </div>
+          <div class="field">
+            <label for="note">Clinical note</label>
+            <textarea id="note"></textarea>
+            <div class="hint">Edit freely &mdash; removing a documented fact is the fastest way to see the system abstain.</div>
+          </div>
+          <button class="go" id="go" type="submit">Evaluate request</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-h">Decision</div>
+      <div class="panel-b" id="out">
+        <div class="empty">
+          <h3>No request evaluated yet</h3>
+          <p>Pick a scenario on the left, or write your own note, then evaluate.
+             The first call takes a few seconds.</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    <p><b>Policies:</b> CMS National Coverage Determinations 100.1 (bariatric surgery),
+       240.4 (CPAP therapy), 240.4.1 (sleep testing) &mdash; real public documents.</p>
+    <p>No patient data is used anywhere. Every request here is synthetic.
+       <a href="/docs">API documentation</a> &middot; <a href="/health">Health</a></p>
+  </footer>
+</main>
+
+<script>
+const SCENARIOS = [
+  { name:"Meets all criteria", proc:"43644", dx:"E66.01, E11.9",
+    note:"52F, BMI 41.2. Type 2 diabetes mellitus diagnosed 2019. Completed 14 months of physician-supervised diet and exercise with maximum 6 kg loss, subsequently regained. Requesting laparoscopic Roux-en-Y gastric bypass." },
+  { name:"Documentation incomplete", proc:"43644", dx:"E66.01, E11.9",
+    note:"52F, BMI 41.2. Type 2 diabetes mellitus diagnosed 2019. Requesting laparoscopic Roux-en-Y gastric bypass." },
+  { name:"Criterion not met", proc:"43644", dx:"E66.9, I10",
+    note:"48M, BMI 31.4. Hypertension managed on lisinopril. Completed 18 months of supervised diet and exercise without durable weight loss. Requesting laparoscopic Roux-en-Y gastric bypass." },
+  { name:"CPAP, borderline AHI", proc:"E0601", dx:"G47.33",
+    note:"59M, home sleep test with Type III monitor, AHI 9 events per hour. Reports severe daytime sleepiness and documented hypertension. Sleep study ordered by the treating physician and furnished under physician supervision. Patient educated on device use prior to initiation. Requesting CPAP therapy." },
+  { name:"Outside the corpus", proc:"66984", dx:"H25.13",
+    note:"62F with dense nuclear cataract, right eye. Best corrected visual acuity 20/70. Requesting phacoemulsification with intraocular lens implantation." },
+];
+
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v).replace(/[&<>"']/g, (c) =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+let activePreset = null;
+function load(s, i) {
+  $("proc").value = s.proc; $("dx").value = s.dx; $("note").value = s.note;
+  activePreset = i;
+  [...$("presets").children].forEach((b, n) =>
+    b.setAttribute("aria-pressed", String(n === i)));
+}
+SCENARIOS.forEach((s, i) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "preset"; b.textContent = s.name;
+  b.setAttribute("aria-pressed", "false");
+  b.onclick = () => load(s, i);
+  $("presets").appendChild(b);
+});
+load(SCENARIOS[0], 0);
+["proc","dx","note"].forEach((id) => $(id).addEventListener("input", () => {
+  activePreset = null;
+  [...$("presets").children].forEach((b) => b.setAttribute("aria-pressed","false"));
+}));
+
+const LABEL = { approve:"Approve", deny:"Deny", route_to_human:"Route to human reviewer" };
+
+/* Derive the pipeline trace from the response. The three stages mirror the
+   server's actual control flow, so a visitor can see where a request stopped. */
+function trace(d) {
+  const cites = d.citations || [];
+  const best = cites.length ? Math.max(...cites.map((c) => c.similarity)) : 0;
+  const reached = d.escalation_reason !== "insufficient_policy_match" && cites.length > 0;
+  const evaluated = (d.criteria || []).length > 0;
+  const resolved = (d.criteria || []).filter((c) => c.verdict !== "unknown").length;
+
+  const steps = [
+    { cls: cites.length ? (reached ? "done" : "stop") : "stop",
+      icon: cites.length ? (reached ? "1" : "!") : "!",
+      title: "Policy retrieval",
+      detail: cites.length
+        ? `${cites.length} passages, best match <code>${best.toFixed(3)}</code>`
+          + (reached ? "" : " &mdash; below the 0.350 floor, so the model was never called")
+        : "No passage matched" },
+    { cls: !reached ? "skip" : (evaluated ? "done" : "stop"),
+      icon: !reached ? "–" : (evaluated ? "2" : "!"),
+      title: "Criteria evaluation",
+      detail: !reached
+        ? "Skipped"
+        : (evaluated
+            ? `${d.criteria.length} criteria extracted, ${resolved} resolved`
+            : (d.escalation_reason === "policy_not_applicable"
+                ? "Model reported the policy does not govern this procedure"
+                : "No evaluable criteria found")) },
+    { cls: d.outcome === "route_to_human" ? "stop" : "done",
+      icon: d.outcome === "route_to_human" ? "!" : "3",
+      title: "Rule engine",
+      detail: d.escalation_reason
+        ? `Escalated: <code>${esc(d.escalation_reason)}</code>`
+        : (d.outcome === "approve"
+            ? "All criteria met → approve"
+            : "A criterion explicitly failed → deny") },
+  ];
+
+  return `<div class="trace">${steps.map((s) => `
+    <div class="step ${s.cls}">
+      <div class="node">${s.icon}</div>
+      <div><div class="step-t">${s.title}</div><div class="step-d">${s.detail}</div></div>
+    </div>`).join("")}</div>`;
+}
+
+function render(d) {
+  const pct = Math.round((d.confidence || 0) * 100);
+  const cites = d.citations || [];
+  const best = cites.length ? Math.max(...cites.map((c) => c.similarity)) : 0;
+  const crit = d.criteria || [];
+  const resolved = crit.filter((c) => c.verdict !== "unknown").length;
+
+  const formula = crit.length
+    ? `${best.toFixed(3)} retrieval &times; ${resolved}/${crit.length} criteria resolved`
+    : `${best.toFixed(3)} retrieval, no criteria evaluated`;
+
+  const criteria = crit.length
+    ? crit.map((c) => `
+        <div class="crit">
+          <span class="chip ${c.verdict}">${c.verdict.replace("_"," ")}</span>
+          <div class="crit-n">
+            ${esc(c.criterion)}
+            ${c.evidence ? `<div class="crit-e">${esc(c.evidence)}</div>`
+              : (c.verdict === "unknown"
+                  ? `<div class="crit-miss">Not addressed anywhere in the note.</div>` : "")}
+          </div>
+        </div>`).join("")
+    : `<p style="color:var(--ink-3);font-size:13.5px;margin:0">
+         None &mdash; the request stopped before criteria evaluation.</p>`;
+
+  const citations = cites.length
+    ? cites.map((c, i) => `
+        <details class="cite"${i === 0 ? " open" : ""}>
+          <summary>
+            <span class="cite-n">
+              <span class="caret">&#9654;</span>
+              <span>${esc(c.source_document)}${c.page ? " &middot; p." + c.page : ""}</span>
+            </span>
+            <span class="sim${i === 0 ? " best" : ""}">${c.similarity.toFixed(3)}</span>
+          </summary>
+          <pre>${esc(c.text)}</pre>
+        </details>`).join("")
+    : `<p style="color:var(--ink-3);font-size:13.5px;margin:0">No policy matched.</p>`;
+
+  $("out").innerHTML = `
+    <div class="verdict ${d.outcome}">
+      <div class="v-top">
+        <span class="v-label">${LABEL[d.outcome] || d.outcome}</span>
+        ${d.escalation_reason ? `<span class="v-tag">${esc(d.escalation_reason)}</span>` : ""}
+      </div>
+      <div class="v-reason">${esc(d.reason)}</div>
+    </div>
+
+    <div class="meter">
+      <div class="meter-h"><span>Confidence</span><b>${pct}%</b></div>
+      <div class="bar"><span style="width:${pct}%"></span></div>
+      <div class="meter-f">${formula}</div>
+    </div>
+
+    <h3 class="sec">How this request was processed</h3>
+    ${trace(d)}
+
+    <h3 class="sec" style="margin-top:22px">Coverage criteria</h3>
+    ${criteria}
+
+    <h3 class="sec" style="margin-top:22px">Policy cited</h3>
+    ${citations}`;
+}
+
+const STAGES = [
+  "Embedding the request…",
+  "Searching the policy corpus…",
+  "Evaluating coverage criteria…",
+  "Still working — retrying an overloaded model…",
+];
+
+$("form").onsubmit = async (e) => {
+  e.preventDefault();
+  const btn = $("go");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>Evaluating';
+
+  let n = 0;
+  $("out").innerHTML =
+    `<div class="loading"><span class="spin" style="border-color:rgba(127,127,127,.3);border-top-color:var(--accent)"></span>
+     <div class="stage" id="stage">${STAGES[0]}</div></div>`;
+  const tick = setInterval(() => {
+    n = Math.min(n + 1, STAGES.length - 1);
+    const el = $("stage"); if (el) el.textContent = STAGES[n];
+  }, 2600);
+
+  try {
+    const res = await fetch("/v1/prior-auth/evaluate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        member_id: $("member").value.trim(),
+        procedure_code: $("proc").value.trim(),
+        diagnosis_codes: $("dx").value.split(",").map((s) => s.trim()).filter(Boolean),
+        clinical_note: $("note").value.trim(),
+        requested_units: Number($("units").value) || 1,
+      }),
+    });
+    const body = await res.json();
+    if (!res.ok) {
+      $("out").innerHTML = `<div class="err">${esc(body.detail || res.statusText)}</div>`;
+    } else {
+      render(body);
+    }
+  } catch (err) {
+    $("out").innerHTML = `<div class="err">Could not reach the API: ${esc(err.message)}</div>`;
+  } finally {
+    clearInterval(tick);
+    btn.disabled = false;
+    btn.textContent = "Evaluate request";
+  }
+};
+</script>
+</body>
+</html>

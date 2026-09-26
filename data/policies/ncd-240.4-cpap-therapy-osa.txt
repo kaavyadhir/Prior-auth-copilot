@@ -1,0 +1,78 @@
+SOURCE: Centers for Medicare & Medicaid Services, Medicare Coverage Database
+DOCUMENT: National Coverage Determination (NCD) 240.4
+TITLE: Continuous Positive Airway Pressure (CPAP) Therapy For Obstructive Sleep Apnea (OSA)
+URL: https://www.cms.gov/medicare-coverage-database/view/ncd.aspx?ncdid=226
+EFFECTIVE DATE OF THIS VERSION: 03/13/2008
+RETRIEVED: 2026-09-26
+NOTE: Verbatim policy text. Site navigation, transmittal numbers and revision
+history have been omitted; no policy language has been altered.
+
+A. General
+
+Continuous Positive Airway Pressure (CPAP) is a non-invasive technique for providing single levels
+of air pressure from a flow generator, via a nose mask, through the nares. The purpose is to
+prevent the collapse of the oropharyngeal walls and the obstruction of airflow during sleep, which
+occurs in obstructive sleep apnea (OSA).
+
+The apnea hypopnea index (AHI) is equal to the average number of episodes of apnea and hypopnea per
+hour. The respiratory disturbance index (RDI) is equal to the average number of respiratory
+disturbances per hour.
+
+Apnea is defined as a cessation of airflow for at least 10 seconds. Hypopnea is defined as an
+abnormal respiratory event lasting at least 10 seconds with at least a 30% reduction in
+thoracoabdominal movement or airflow as compared to baseline, and with at least a 4% oxygen
+desaturation.
+
+The AHI and/or RDI may be measured by polysomnography (PSG) in a facility-based sleep study
+laboratory, or by a Type II home sleep test (HST) monitor, a Type III HST monitor, or a Type IV HST
+monitor measuring at least 3 channels.
+
+Indications and Limitations of Coverage
+
+B. Nationally Covered Indications
+
+Effective for claims with dates of service on and after March 13, 2008, the Centers for Medicare &
+Medicaid Services (CMS) determines that CPAP therapy when used in adult patients with OSA is
+considered reasonable and necessary under the following situations:
+
+The use of CPAP is covered under Medicare when used in adult patients with OSA. Coverage of CPAP is
+initially limited to a 12-week period to identify beneficiaries diagnosed with OSA as subsequently
+described who benefit from CPAP. CPAP is subsequently covered only for those beneficiaries
+diagnosed with OSA who benefit from CPAP during this 12-week period.
+
+The provider of CPAP must conduct education of the beneficiary prior to the use of the CPAP device
+to ensure that the beneficiary has been educated in the proper use of the device. A caregiver, for
+example a family member, may be compensatory, if consistently available in the beneficiary's home
+and willing and able to safely operate the CPAP device.
+
+A positive diagnosis of OSA for the coverage of CPAP must include a clinical evaluation and a
+positive:
+- attended PSG performed in a sleep laboratory; or
+- unattended HST with a Type II home sleep monitoring device; or
+- unattended HST with a Type III home sleep monitoring device; or
+- unattended HST with a Type IV home sleep monitoring device that measures at least 3 channels.
+
+The sleep test must have been previously ordered by the beneficiary's treating physician and
+furnished under appropriate physician supervision.
+
+An initial 12-week period of CPAP is covered in adult patients with OSA if either of the following
+criterion using the AHI or RDI are met:
+- AHI or RDI greater than or equal to 15 events per hour, or
+- AHI or RDI greater than or equal to 5 events and less than or equal to 14 events per hour with
+  documented symptoms of excessive daytime sleepiness, impaired cognition, mood disorders or
+  insomnia, or documented hypertension, ischemic heart disease, or history of stroke.
+
+The AHI or RDI is calculated on the average number of events per hour. If the AHI or RDI is
+calculated based on less than 2 hours of continuous recorded sleep, the total number of recorded
+events to calculate the AHI or RDI during sleep testing must be at a minimum the number of events
+that would have been required in a 2-hour period.
+
+C. Nationally Non-covered Indications
+
+Effective for claims with dates of services on and after March 13, 2008, other diagnostic tests for
+the diagnosis of OSA, other than those noted above for prescribing CPAP, are not sufficient for the
+coverage of CPAP.
+
+D. Other
+
+N/A
