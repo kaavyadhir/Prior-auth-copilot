@@ -10,7 +10,8 @@ from __future__ import annotations
 import json
 import logging
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from app.config import require_api_key, settings
 from app.schemas import CriteriaEvaluation, PriorAuthRequest
