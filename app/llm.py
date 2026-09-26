@@ -1,4 +1,4 @@
-"""Gemini client, constrained to structured output and hardened against a flaky upstream.
+"""Gemini client, constrained to structured output.
 
 The model is never asked for a decision. It is asked only to (a) list the
 criteria the retrieved policy imposes and (b) say, per criterion, whether the
@@ -9,20 +9,12 @@ from __future__ import annotations
 
 import json
 import logging
-import time
-from collections.abc import Callable
-from typing import Any
 
 from app.config import require_api_key, settings
 from app.schemas import CriteriaEvaluation, PriorAuthRequest
+from app.upstream import run_with_fallback
 
 logger = logging.getLogger(__name__)
-
-# Worth retrying against the SAME model - the request was fine, the service was busy.
-RETRYABLE_STATUS = {429, 500, 502, 503, 504}
-# The model itself is gone or not granted to this key. Retrying is pointless;
-# move to the next model in the chain.
-MODEL_UNAVAILABLE_STATUS = {404}
 
 SYSTEM_PROMPT = """\
 You are a clinical policy analyst supporting a health-plan prior-authorization \
@@ -66,69 +58,6 @@ correct and expected answer for anything the note is silent on.
 """
 
 
-class LLMUnavailable(RuntimeError):
-    """Every model in the chain failed for a reason worth retrying later."""
-
-
-def _status_code(exc: Exception) -> int | None:
-    return getattr(exc, "code", None)
-
-
-def generate_with_fallback(
-    client: Any,
-    contents: str,
-    config: Any,
-    *,
-    models: list[str],
-    max_attempts: int,
-    backoff_seconds: float,
-    sleep: Callable[[float], None] = time.sleep,
-) -> tuple[Any, str]:
-    """Call the first model that answers, returning (response, model_used).
-
-    Two distinct failure modes, handled differently:
-
-    * Transient (429/5xx) - the request was valid and the service was busy.
-      Retry the same model with exponential backoff, then fall through.
-    * Model unavailable (404) - retrying cannot help, so skip straight to the
-      next model. Providers retire models on their own schedule and keep
-      advertising them in list-models, so this is not an edge case.
-
-    Anything else (a malformed request, a bad key) is a bug or a
-    misconfiguration and is raised immediately rather than masked by retries.
-    """
-    last_error: Exception | None = None
-
-    for model in models:
-        for attempt in range(max_attempts):
-            try:
-                return client.models.generate_content(
-                    model=model, contents=contents, config=config
-                ), model
-            except Exception as exc:  # noqa: BLE001 - re-raised below unless transient
-                status = _status_code(exc)
-                last_error = exc
-
-                if status in RETRYABLE_STATUS and attempt < max_attempts - 1:
-                    delay = backoff_seconds * (2**attempt)
-                    logger.warning(
-                        "%s returned %s; retrying in %.1fs (attempt %d/%d)",
-                        model, status, delay, attempt + 1, max_attempts,
-                    )
-                    sleep(delay)
-                    continue
-
-                if status in RETRYABLE_STATUS or status in MODEL_UNAVAILABLE_STATUS:
-                    logger.warning("giving up on %s (status %s)", model, status)
-                    break
-
-                raise
-
-    raise LLMUnavailable(
-        f"No model in {models} could be reached. Last error: {last_error}"
-    ) from last_error
-
-
 def _build_prompt(request: PriorAuthRequest, excerpts: list[str]) -> str:
     joined = "\n\n---\n\n".join(excerpts)
     return (
@@ -147,14 +76,17 @@ def evaluate_criteria(
     from google.genai import types
 
     client = genai.Client(api_key=require_api_key())
-    response, model_used = generate_with_fallback(
-        client,
-        _build_prompt(request, excerpts),
-        types.GenerateContentConfig(
-            system_instruction=SYSTEM_PROMPT,
-            response_mime_type="application/json",
-            response_schema=CriteriaEvaluation,
-            temperature=0.0,
+    config = types.GenerateContentConfig(
+        system_instruction=SYSTEM_PROMPT,
+        response_mime_type="application/json",
+        response_schema=CriteriaEvaluation,
+        temperature=0.0,
+    )
+    prompt = _build_prompt(request, excerpts)
+
+    response, model_used = run_with_fallback(
+        lambda model: client.models.generate_content(
+            model=model, contents=prompt, config=config
         ),
         models=settings.model_chain,
         max_attempts=settings.llm_max_attempts,

@@ -14,7 +14,17 @@ class Settings(BaseSettings):
     )
     llm_max_attempts: int = 2
     llm_backoff_seconds: float = 1.0
-    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    embedding_model: str = "gemini-embedding-001"
+    # Deliberately empty. The obvious alternative, gemini-embedding-2, does not
+    # accept retrieval task types and returns ONE aggregated vector for a
+    # multi-input request. Falling back to it would silently build an index with
+    # different semantics from the queries run against it - worse than failing,
+    # because retrieval would just quietly degrade. An embedding outage instead
+    # leaves the index empty, and every request escalates to a human.
+    embedding_fallback_models: str = ""
+    # 768 keeps the index small and is ample for a corpus this size.
+    embedding_dimensions: int = 768
+    embedding_batch_size: int = 16
 
     # If the best-matching policy passage scores below this, we do not let the
     # model reason at all - we route the case to a human reviewer.
@@ -26,13 +36,22 @@ class Settings(BaseSettings):
 
 
     @property
+    def embedding_model_chain(self) -> list[str]:
+        return _dedupe([self.embedding_model] + _split(self.embedding_fallback_models))
+
+    @property
     def model_chain(self) -> list[str]:
         """Primary model first, then declared fallbacks, de-duplicated."""
-        chain = [self.llm_model] + [
-            name.strip() for name in self.llm_fallback_models.split(",") if name.strip()
-        ]
-        seen: set[str] = set()
-        return [m for m in chain if not (m in seen or seen.add(m))]
+        return _dedupe([self.llm_model] + _split(self.llm_fallback_models))
+
+
+def _split(value: str) -> list[str]:
+    return [name.strip() for name in value.split(",") if name.strip()]
+
+
+def _dedupe(names: list[str]) -> list[str]:
+    seen: set[str] = set()
+    return [n for n in names if not (n in seen or seen.add(n))]
 
 
 settings = Settings()

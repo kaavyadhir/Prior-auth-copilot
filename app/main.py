@@ -29,10 +29,25 @@ async def lifespan(app: FastAPI):
     """
     global store
     store = NumpyStore(settings.index_dir)
-    from app.embeddings import get_model
 
-    get_model()
-    logger.info("index loaded: %s passages", store.count())
+    # Embeddings come from the API now, so the index cannot be baked into the
+    # image - the build has no credentials. Building it here costs one batched
+    # request at startup and keeps the API key out of the image entirely.
+    if store.count() == 0:
+        try:
+            from app.ingest import ingest_directory
+
+            report = ingest_directory(settings.policy_dir, store)
+            logger.info("built policy index: %s passages", report.passages_added)
+            if report.empty_files:
+                logger.warning("no text extracted from: %s", report.empty_files)
+        except Exception:
+            # Never take the process down over this. /health reports 0 passages
+            # and requests escalate to a human, which is the correct degraded
+            # behaviour for this service.
+            logger.exception("could not build the policy index at startup")
+
+    logger.info("index ready: %s passages", store.count())
     yield
 
 

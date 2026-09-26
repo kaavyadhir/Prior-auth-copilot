@@ -1,7 +1,7 @@
 """Find the policy passages that govern a given request."""
 from __future__ import annotations
 
-from app.embeddings import embed
+from app.embeddings import QUERY, embed
 from app.schemas import Citation, PriorAuthRequest
 from app.store import VectorStore
 
@@ -22,7 +22,7 @@ def build_query(request: PriorAuthRequest) -> str:
 
 
 def retrieve(request: PriorAuthRequest, store: VectorStore, k: int) -> list[Citation]:
-    hits = store.search(embed([build_query(request)])[0], k)
+    hits = store.search(embed([build_query(request)], QUERY)[0], k)
     return [
         Citation(
             source_document=p.source_document,

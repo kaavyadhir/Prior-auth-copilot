@@ -26,7 +26,8 @@ class FakeStore:
 
 @pytest.fixture
 def no_embeddings(monkeypatch):
-    monkeypatch.setattr(ingest, "embed", lambda texts: np.ones((len(texts), 4)))
+    monkeypatch.setattr(ingest, "embed",
+                        lambda texts, task_type=None: np.ones((len(texts), 4)))
 
 
 def test_text_files_are_ingested(tmp_path, no_embeddings):

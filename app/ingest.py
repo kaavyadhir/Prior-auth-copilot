@@ -12,7 +12,7 @@ from dataclasses import dataclass
 
 from pypdf import PdfReader
 
-from app.embeddings import embed
+from app.embeddings import DOCUMENT, embed
 from app.store import Passage, VectorStore
 
 TEXT_EXTENSIONS = {".txt", ".md"}
@@ -138,7 +138,7 @@ def ingest_directory(policy_dir: str, store: VectorStore) -> IngestReport:
             empty.append(filename)
 
     if passages:
-        store.add(passages, embed([p.text for p in passages]))
+        store.add(passages, embed([p.text for p in passages], DOCUMENT))
 
     return IngestReport(
         passages_added=len(passages),

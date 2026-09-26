@@ -76,29 +76,47 @@ That split buys three things:
 **Full note** — BMI 41.2, type 2 diabetes, 14 months of failed supervised diet:
 
 ```
-Approve · confidence 58%
-  [met] body-mass index >= 35 kg/m2            "52F, BMI 41.2"
+Approve · confidence 73%
+  [met] body-mass index >= 35 kg/m2            "BMI 41.2"
   [met] at least one co-morbidity              "Type 2 diabetes mellitus diagnosed 2019"
   [met] previously unsuccessful with           "Completed 14 months of physician-supervised
         medical treatment for obesity           diet and exercise with maximum 6 kg loss"
-  cited: ncd-100.1-bariatric-surgery.txt (0.577)
+  cited: ncd-100.1-bariatric-surgery.txt (0.727)
 ```
 
 **The same note with the diet sentence deleted:**
 
 ```
-Route to human reviewer · confidence 37% · incomplete_documentation
-  reason: Clinical documentation does not address: The beneficiary has been
+Route to human reviewer · confidence 49% · incomplete_documentation
+  reason: Clinical documentation does not address: The patient must have been
           previously unsuccessful with medical treatment for obesity
   [met]     body-mass index >= 35 kg/m2        "BMI 41.2"
   [met]     at least one co-morbidity          "Type 2 diabetes mellitus diagnosed 2019"
   [unknown] previously unsuccessful with medical treatment for obesity
-  cited: ncd-100.1-bariatric-surgery.txt (0.559)
+  cited: ncd-100.1-bariatric-surgery.txt (0.729)
 ```
 
 The escalation is not a failure mode. It is a work-routing output with a reason: the
 reviewer is told *which* criterion is undocumented, so the plan can request one specific
 item rather than the provider waiting days to learn the submission was incomplete.
+
+### The case a threshold check gets wrong
+
+A CPAP request with an AHI of 9 — below the headline threshold of 15 in NCD 240.4:
+
+```
+Approve · confidence 77%
+  [met] qualifying sleep test (PSG, or Type II/III/IV HST with >= 3 channels)
+  [met] ordered by treating physician and furnished under supervision
+  [met] AHI >= 15, OR AHI 5-14 with documented daytime sleepiness, impaired
+        cognition, mood disorders, insomnia, hypertension, ischemic heart
+        disease or stroke                      "AHI 9 ... severe daytime
+                                                sleepiness and documented hypertension"
+  cited: ncd-240.4-cpap-therapy-osa.txt (0.772)
+```
+
+A keyword or threshold check reads "9 < 15" and denies. The policy has a second
+qualifying branch, and the note satisfies it.
 
 ### Confidence is arithmetic, not a vibe
 
@@ -106,7 +124,7 @@ item rather than the provider waiting days to learn the submission was incomplet
 confidence = retrieval_similarity × (criteria_resolved / criteria_total)
 ```
 
-58% is `0.577 × 3/3`. 37% is `0.559 × 2/3`. A strong policy match whose criteria are
+73% is `0.727 × 3/3`. 49% is `0.729 × 2/3`. A strong policy match whose criteria are
 mostly `unknown` is not a confident decision, and neither is a fully-resolved evaluation
 against a passage that barely matched.
 
@@ -135,7 +153,7 @@ floor, so the LLM is called — and the model then reports `policy_applies=false
 
 ## Upstream resilience
 
-`app/llm.py` distinguishes three failure classes:
+`app/upstream.py` distinguishes three failure classes, shared by generation and embedding:
 
 - **Transient** (429, 5xx) — retry the same model with exponential backoff.
 - **Model unavailable** (404) — skip immediately. Providers retire models on their own
@@ -185,8 +203,26 @@ cross page boundaries constantly. A hard cut drops the tail of the list, which s
 turns a `not_met` into an `unknown`. Oversized paragraphs are split on sentence
 boundaries — PDF extraction routinely returns a whole page as one blob.
 
-**The embedding model loads once, at startup.** Loading it per request is the standard way
-to turn a 200 ms endpoint into a 30 s one.
+**Embeddings moved from a local model to the provider's API.** The first version ran
+sentence-transformers locally, which needed PyTorch and roughly 500 MB resident - more
+than any free container host allows. Calling the embedding API instead took the image
+from ~1.5 GB to ~300 MB and runtime memory to about 150 MB.
+
+The trade-off is real: retrieval now needs a network round trip and depends on the same
+upstream as generation. It is mitigated by sharing the retry/fallback policy in
+`app/upstream.py`, and by embedding the corpus once at startup rather than per request.
+
+**Indexed passages and queries use different embedding task types.** `RETRIEVAL_DOCUMENT`
+for the corpus, `RETRIEVAL_QUERY` for the incoming request. Asymmetric retrieval
+embeddings measurably beat using one type for both.
+
+**The embedding chain has no fallback, on purpose.** Generation falls back across seven models; embedding falls back to nothing. The available alternative does not accept retrieval task types and aggregates multi-input requests into a single vector, so falling back to it would build an index whose semantics differ from the queries run against it. That degrades retrieval silently. Failing loudly and escalating every request to a human is the safer failure.
+
+**Batch embedding verifies it got one vector per input.** Some embedding models return a
+single *aggregated* vector for a multi-input request. Accepting that silently would
+misalign every passage with its vector and corrupt the index in a way that looks like
+poor retrieval rather than a bug, so the code checks and falls back to one request per
+text. See `tests/test_embeddings.py`.
 
 **Retrieval queries combine codes and prose.** Codes alone match the procedure table but
 miss the criteria text; the note alone matches symptom language but drifts to the wrong
@@ -199,18 +235,19 @@ unreported, that looks identical to a broken retriever at query time.
 
 ## Known limitations
 
-**Over-escalation on conditional policy text.** Evaluating a CPAP request, the system
-correctly finds the harder rule — an AHI of 9 qualifies under the "5–14 events with
-documented symptoms" branch, which a naive threshold check would deny. But it also
-extracts a footnote requiring a minimum event count *when the AHI was computed from under
-two hours of recorded sleep*. The note never says the study was short, so the rule should
-not apply; instead it becomes `unknown` and escalates a request that should be approved.
+**Criterion extraction needed two revisions to get right.** The first version treated
+every policy sentence as a potential criterion. On the CPAP case it correctly found the
+hard rule — AHI 9 qualifies under the "5–14 with documented symptoms" branch — but also
+extracted a footnote requiring a minimum event count *when the AHI was computed from
+under two hours of recorded sleep*. The note never said the study was short, so the rule
+did not apply, yet it landed as `unknown` and escalated a request that should have been
+approved.
 
-Two prompt revisions have narrowed this — alternative qualifying paths now collapse into a
-single criterion, dropping the extracted count from five to four — but distinguishing a
-genuine criterion from one whose precondition is absent is not fully solved. A more robust
-fix than prompting would be a second pass that asks, per criterion, whether its triggering
-circumstance is present at all.
+Two prompt revisions fixed it: alternative qualifying paths now collapse into a single
+criterion rather than several, and conditional rules whose triggering circumstance is
+absent from the note are not extracted at all. That case now approves at 77%. The more
+robust fix, if the corpus grew, would be a second pass asking per criterion whether its
+precondition is present, rather than relying on prompt instructions.
 
 **No labelled evaluation set.** Correctness is currently argued from unit tests and
 inspected cases. Measuring the escalation rate and the false-approval rate needs a corpus
@@ -221,6 +258,11 @@ be hammered by every concurrent caller. That wants a circuit breaker.
 
 **Three policies.** Enough to demonstrate the mechanism; a production corpus is thousands
 of documents, where exact cosine search would need replacing.
+
+**Every request costs two API round trips** — one to embed the query, one to evaluate
+criteria. A local embedding model would remove the first, at the memory cost that made
+this change necessary. A query-embedding cache would remove most of it for repeated
+procedures.
 
 ---
 
@@ -233,5 +275,5 @@ all requests in tests, examples and the demo UI are synthetic.
 
 ## Stack
 
-Python · FastAPI · Pydantic · sentence-transformers · Google Gemini · NumPy · pytest ·
+Python · FastAPI · Pydantic · Google Gemini (generation + embeddings) · NumPy · pytest ·
 Docker · GitHub Actions
