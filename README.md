@@ -1,13 +1,3 @@
----
-title: Prior Authorization Decision Support
-colorFrom: blue
-colorTo: green
-sdk: docker
-app_port: 8000
-pinned: false
-license: mit
----
-
 # Prior Authorization Decision Support
 
 An API and demo UI that evaluates health-insurance prior-authorization requests against
@@ -20,6 +10,9 @@ An API and demo UI that evaluates health-insurance prior-authorization requests 
 | `route_to_human` | The system cannot responsibly decide — and says exactly why. |
 
 Every response cites the verbatim policy passage it was decided from.
+
+**[Try it live &rarr;](https://prior-auth-copilot.onrender.com)**  — free tier, so the
+first request after a quiet spell takes a few seconds to wake the service.
 
 ---
 
