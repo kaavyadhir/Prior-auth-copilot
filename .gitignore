@@ -7,3 +7,7 @@ data/index/
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
+
+# SSH private keys - never commit these
+*.pem
+*.key

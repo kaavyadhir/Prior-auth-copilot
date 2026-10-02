@@ -11,8 +11,10 @@ An API and demo UI that evaluates health-insurance prior-authorization requests 
 
 Every response cites the verbatim policy passage it was decided from.
 
-**[Try it live &rarr;](https://prior-auth-copilot.onrender.com)**  — free tier, so the
-first request after a quiet spell takes a few seconds to wake the service.
+**[Try it live &rarr;](https://kaavya-copilot.duckdns.org)**  — running on AWS EC2; see
+[Deployment](#deployment). A second copy runs on
+[Render](https://prior-auth-copilot.onrender.com), where the free tier sleeps when idle,
+so the first request after a quiet spell takes a few seconds to wake the service.
 
 ---
 
@@ -184,6 +186,41 @@ CI runs lint, tests and a Docker build on every push.
 
 ---
 
+## Deployment
+
+The live instance runs on an **AWS EC2** `t3.micro` in `ap-south-1` (Mumbai):
+
+```
+internet ──► Caddy  :80 / :443  ──► Docker container  127.0.0.1:8000
+             TLS, auto-renewed       uvicorn, non-root UID 1000
+```
+
+```bash
+docker build -t prior-auth-copilot .
+docker run -d --name copilot --restart unless-stopped \
+  --env-file .env -p 127.0.0.1:8000:8000 prior-auth-copilot
+```
+
+**The container is bound to `127.0.0.1`, not `0.0.0.0`.** The security group already blocks
+port 8000, so this is the second lock rather than the first — but it means a plain-HTTP
+route into the application cannot appear by loosening one firewall rule. Caddy is the only
+public listener, and it obtains and renews a Let's Encrypt certificate with no configuration
+beyond the hostname.
+
+**The API key arrives at runtime via `--env-file`, never in the image.** The image CI builds
+is the image that runs, and it carries no credentials. The same property is why the policy
+index is built at startup from the embedding API rather than committed: the build has no key,
+so it cannot embed anything.
+
+**`--restart unless-stopped` plus an Elastic IP** keep both the service and its address
+stable across a reboot — without the static address, the DNS record would need updating
+every time the instance restarted.
+
+The security group exposes only 22, 80 and 443. Swap is enabled because 1 GB of RAM is not
+enough to `pip install` the dependency set during a build.
+
+---
+
 ## Design notes
 
 **Storage is behind an interface.** `app/store.py` defines `VectorStore`; `NumpyStore` is
@@ -269,4 +306,4 @@ all requests in tests, examples and the demo UI are synthetic.
 ## Stack
 
 Python · FastAPI · Pydantic · Google Gemini (generation + embeddings) · NumPy · pytest ·
-Docker · GitHub Actions
+Docker · GitHub Actions · AWS EC2 · Caddy
