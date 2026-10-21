@@ -12,7 +12,7 @@ class Settings(BaseSettings):
         "gemini-3.7-flash,gemini-3.5-flash,gemini-3-flash-preview,"
         "gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-flash-lite-latest"
     )
-    llm_max_attempts: int = 2
+    llm_max_attempts: int = 3
     llm_backoff_seconds: float = 1.0
     embedding_model: str = "gemini-embedding-001"
     # Deliberately empty. The obvious alternative, gemini-embedding-2, does not

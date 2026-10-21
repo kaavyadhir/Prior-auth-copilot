@@ -57,7 +57,7 @@ outcome.
 That split buys three things:
 
 1. **Auditability** — every outcome traces to a named rule and a quoted policy passage.
-2. **Testability** — the rules are pure functions. All 31 tests run with no API key and no
+2. **Testability** — the rules are pure functions. All 37 tests run with no API key and no
    model. See `tests/test_decision.py`.
 3. **Safety** — approval requires *every* criterion to be explicitly met, so no prompt,
    accidental or adversarial, can produce an approval the policy does not support.

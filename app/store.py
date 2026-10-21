@@ -1,13 +1,14 @@
 """Vector storage.
 
-Two backends behind one interface:
+One backend behind an interface:
 
-* `NumpyStore`   - zero-setup, file-backed. Fine at this corpus size (a few
-                   thousand policy passages) and keeps local dev dependency-free.
-* `PgVectorStore` - Postgres + pgvector, used by docker-compose.
+* `NumpyStore` - zero-setup, file-backed. Exact cosine search over an in-memory
+                 matrix. Fine at this corpus size (a few thousand policy
+                 passages) and keeps local dev dependency-free.
 
-Keeping storage behind an interface means the retrieval and decision layers
-never change when the backend does.
+The `VectorStore` ABC exists so that swapping in an approximate-nearest-neighbour
+index or a vector database - which a production-sized corpus would need - does
+not touch the retrieval or decision layers. No such backend is implemented here.
 """
 from __future__ import annotations
 
