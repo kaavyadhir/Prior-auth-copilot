@@ -9,15 +9,19 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 
 from app import retrieval
-from app.config import settings
+from app.config import ConfigError, settings
 from app.decision import decide
 from app.llm import evaluate_criteria
 from app.schemas import Decision, PriorAuthRequest
 from app.store import NumpyStore
+from app.upstream import UpstreamUnavailable, status_code
 
 logger = logging.getLogger("prior_auth")
 STATIC_DIR = Path(__file__).parent / "static"
 store: NumpyStore | None = None
+
+# A credential the provider rejects is an operator error, not a clinical one.
+CREDENTIAL_STATUS = {401, 403}
 
 
 @asynccontextmanager
@@ -94,7 +98,30 @@ def evaluate(request: PriorAuthRequest) -> Decision:
     if citations and best >= settings.min_retrieval_similarity:
         try:
             evaluation = evaluate_criteria(request, [c.text for c in citations])
-        except Exception:
+        except UpstreamUnavailable:
+            # Every model in the chain was busy. Escalating is the honest
+            # answer: the service genuinely could not evaluate this request.
+            logger.warning("no model in the chain answered; escalating to a human")
+        except ConfigError:
+            # The key is missing or still the template placeholder. Escalating
+            # would make a misconfigured deployment look like it is working.
+            logger.error("the service is not configured with an API key")
+            raise HTTPException(
+                status_code=503,
+                detail="Service is not configured: GEMINI_API_KEY is missing.",
+            ) from None
+        except Exception as exc:
+            code = status_code(exc)
+            if code in CREDENTIAL_STATUS:
+                # A rejected credential is a broken deployment, not an
+                # ambiguous clinical note. Returning route_to_human here would
+                # hide an expired key behind a plausible-looking result - every
+                # request would escalate and the service would appear healthy.
+                logger.error("upstream rejected our credentials (status %s)", code)
+                raise HTTPException(
+                    status_code=503,
+                    detail="Upstream rejected the API credentials.",
+                ) from exc
             logger.exception("criteria evaluation failed")
 
     return decide(request, citations, evaluation, settings.min_retrieval_similarity)
